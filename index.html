@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liner Notes</title>
+
+<!-- FONTS: Abril Fatface for big headlines, Old Standard TT for reading text -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ===== COLORS: change these to restyle the whole app ===== */
+:root {
+  --paper: #E9DFC4;      /* yellowed newsprint */
+  --paper-dark: #DDD0AE; /* shading on the paper */
+  --ink: #1C1A17;        /* printing ink */
+  --ink-soft: #5A5348;   /* faded ink for small text */
+  --red: #A3222B;        /* the second print colour */
+  --display: "Abril Fatface", Georgia, serif;
+  --body: "Old Standard TT", Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
+body {
+  min-height: 100%;
+  background-color: var(--paper);
+  /* subtle paper grain, drawn with a tiny built-in image */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.5;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+
+.page { max-width: 640px; margin: 0 auto; padding: 0 18px 48px; }
+
+/* ===== MASTHEAD (the newspaper title at the top) ===== */
+.masthead { text-align: center; padding: 22px 0 10px; border-bottom: 3px double var(--ink); }
+.masthead h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(54px, 17vw, 96px);
+  line-height: .9;
+  color: var(--red);
+  letter-spacing: -.01em;
+}
+.dateline {
+  display: flex; justify-content: space-between; gap: 12px;
+  margin-top: 10px; padding-top: 6px;
+  border-top: 1px solid var(--ink);
+  font-size: 13px; font-style: italic; color: var(--ink-soft);
+}
+
+/* ===== SEARCH BOX ===== */
+.search { margin: 22px 0 8px; }
+.search label { display: block; font-family: var(--display); font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
+.search p { font-size: 15px; font-style: italic; color: var(--ink-soft); margin-bottom: 12px; }
+.search-row { display: flex; border: 2px solid var(--ink); background: #F3ECD8; }
+.search-row input {
+  flex: 1; min-width: 0;
+  font: 17px var(--body); /* 16px or more stops iPhones zooming in */
+  padding: 12px; border: 0; background: transparent; color: var(--ink);
+}
+.search-row input:focus { outline: none; }
+.search-row:focus-within { outline: 3px solid var(--red); outline-offset: 2px; }
+.search-row button {
+  font: 700 16px var(--body);
+  padding: 0 18px; border: 0; border-left: 2px solid var(--ink);
+  background: var(--ink); color: var(--paper); cursor: pointer;
+}
+.search-row button:active { background: var(--red); }
+
+.status { font-style: italic; color: var(--ink-soft); padding: 18px 0; text-align: center; }
+.status.error { color: var(--red); font-style: normal; }
+
+/* ===== RESULTS LIST ===== */
+.results { list-style: none; }
+.results li { border-bottom: 1px solid var(--ink); }
+.result {
+  display: flex; gap: 14px; align-items: center; width: 100%;
+  padding: 14px 0; background: none; border: 0; text-align: left;
+  color: inherit; font: inherit; cursor: pointer;
+}
+.result:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+.result:active { background: var(--paper-dark); }
+.result-text { min-width: 0; }
+.result-title { font-family: var(--display); font-size: 21px; line-height: 1.15; overflow-wrap: anywhere; }
+.result-artist { font-style: italic; }
+.result-meta { font-size: 14px; color: var(--ink-soft); }
+
+/* ===== ALBUM COVERS, printed like an old halftone photo ===== */
+.cover {
+  position: relative; flex: none;
+  width: 72px; aspect-ratio: 1;
+  background: var(--paper-dark); border: 1px solid var(--ink);
+  overflow: hidden;
+}
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block;
+  filter: grayscale(.8) sepia(.25) contrast(1.2); }
+.cover::after { /* the dot pattern on top */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(28,26,23,.28) 0.8px, transparent 1.2px);
+  background-size: 3px 3px; mix-blend-mode: multiply;
+}
+.cover .blank { /* shown when an album has no cover art */
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: var(--display); font-size: 28px; color: var(--ink-soft);
+}
+
+/* ===== ALBUM DETAIL (pops up when you tap a result) ===== */
+dialog {
+  margin: auto; width: min(92vw, 480px); max-height: 90vh;
+  padding: 22px; border: 2px solid var(--ink);
+  background: var(--paper); color: var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+dialog::backdrop { background: rgba(28,26,23,.55); }
+dialog .cover { width: 100%; margin-bottom: 16px; }
+dialog h2 { font-family: var(--display); font-weight: 400; font-size: 32px; line-height: 1.05; }
+dialog .by { font-style: italic; font-size: 19px; margin: 4px 0 2px; }
+dialog .meta { font-size: 15px; color: var(--ink-soft); }
+.actions { display: flex; gap: 10px; margin-top: 20px; }
+.actions button { flex: 1; font: 700 16px var(--body); padding: 12px; border: 2px solid var(--ink); cursor: pointer; }
+.btn-log { background: var(--red); color: var(--paper); border-color: var(--red) !important; }
+.btn-close { background: transparent; color: var(--ink); }
+.note { margin-top: 12px; font-size: 14px; font-style: italic; color: var(--ink-soft); min-height: 1.4em; }
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog[open] { animation: drop .18s ease-out; }
+  @keyframes drop { from { transform: translateY(12px); opacity: 0; } }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <h1>Liner Notes</h1>
+    <div class="dateline">
+      <span>Vol. 1, No. 1</span>
+      <span id="today"></span>
+    </div>
+  </header>
+
+  <form class="search" id="searchForm">
+    <label for="q">What are you listening to?</label>
+    <p>Search by album, artist, or both, like "rumours fleetwood mac".</p>
+    <div class="search-row">
+      <input id="q" type="search" placeholder="Album or artist" autocomplete="off" enterkeyhint="search">
+      <button type="submit">Search</button>
+    </div>
+  </form>
+
+  <div id="status" class="status" role="status"></div>
+  <ul id="results" class="results"></ul>
+
+</div>
+
+<dialog id="detail">
+  <div class="cover" id="dCover"></div>
+  <h2 id="dTitle"></h2>
+  <p class="by" id="dArtist"></p>
+  <p class="meta" id="dMeta"></p>
+  <div class="actions">
+    <button class="btn-close" id="dClose">Close</button>
+    <button class="btn-log" id="dLog">Log this album</button>
+  </div>
+  <p class="note" id="dNote"></p>
+</dialog>
+
+<script>
+// ---------- Today's date in the masthead ----------
+document.getElementById("today").textContent = new Date().toLocaleDateString(undefined,
+  { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+const form = document.getElementById("searchForm");
+const input = document.getElementById("q");
+const statusEl = document.getElementById("status");
+const resultsEl = document.getElementById("results");
+let albums = []; // the latest search results
+
+// ---------- Searching MusicBrainz (a free public music database) ----------
+// Special characters have meaning in MusicBrainz searches, so we neutralise them.
+function cleanSearch(text) {
+  return text.replace(/([+\-!(){}\[\]^"~*?:\\\/]|&&|\|\|)/g, "\\$1");
+}
+
+async function searchAlbums(text) {
+  const t = cleanSearch(text);
+  // Look for the words in the album title OR the artist name, albums and EPs only.
+  const query = `(releasegroup:(${t}) OR artist:(${t})) AND (primarytype:album OR primarytype:ep)`;
+  const url = "https://musicbrainz.org/ws/2/release-group?fmt=json&limit=20&query=" + encodeURIComponent(query);
+
+  const res = await fetch(url);
+  if (res.status === 503) throw new Error("busy");
+  if (!res.ok) throw new Error("failed");
+  const data = await res.json();
+
+  // Turn MusicBrainz's data into simple album objects.
+  return (data["release-groups"] || []).map(rg => ({
+    id: rg.id,
+    title: rg.title,
+    artist: (rg["artist-credit"] || []).map(c => c.name + (c.joinphrase || "")).join("") || "Unknown artist",
+    year: (rg["first-release-date"] || "").slice(0, 4),
+    type: [rg["primary-type"], ...(rg["secondary-types"] || [])].filter(Boolean).join(", ")
+  }));
+}
+
+// Cover Art Archive hosts album covers, matched by MusicBrainz's album id.
+function coverUrl(id, size) {
+  return `https://coverartarchive.org/release-group/${id}/front-${size}`;
+}
+
+// Builds the cover square; falls back to the album's first letter if no art exists.
+function fillCover(box, album, size) {
+  box.innerHTML = "";
+  const img = new Image();
+  img.alt = "";
+  img.loading = "lazy";
+  img.src = coverUrl(album.id, size);
+  img.onerror = () => {
+    img.remove();
+    const blank = document.createElement("span");
+    blank.className = "blank";
+    blank.textContent = album.title.charAt(0).toUpperCase();
+    box.appendChild(blank);
+  };
+  box.appendChild(img);
+}
+
+function metaLine(album) {
+  return [album.year, album.type].filter(Boolean).join(", ");
+}
+
+// ---------- Showing results ----------
+function showResults(list) {
+  resultsEl.innerHTML = "";
+  list.forEach((album, i) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.className = "result";
+    btn.type = "button";
+
+    const cover = document.createElement("div");
+    cover.className = "cover";
+    fillCover(cover, album, 250);
+
+    const text = document.createElement("div");
+    text.className = "result-text";
+    // textContent (not innerHTML) keeps odd album names from breaking the page
+    const t = document.createElement("div"); t.className = "result-title"; t.textContent = album.title;
+    const a = document.createElement("div"); a.className = "result-artist"; a.textContent = album.artist;
+    const m = document.createElement("div"); m.className = "result-meta"; m.textContent = metaLine(album);
+    text.append(t, a, m);
+
+    btn.append(cover, text);
+    btn.addEventListener("click", () => openDetail(album));
+    li.appendChild(btn);
+    resultsEl.appendChild(li);
+  });
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.blur(); // hides the phone keyboard
+  statusEl.className = "status";
+  statusEl.textContent = "Searching the archives…";
+  resultsEl.innerHTML = "";
+
+  try {
+    albums = await searchAlbums(text);
+    statusEl.textContent = albums.length ? "" : `No albums found for "${text}". Try fewer words or check the spelling.`;
+    showResults(albums);
+  } catch (err) {
+    statusEl.className = "status error";
+    statusEl.textContent = err.message === "busy"
+      ? "The music database is busy. Wait a second and search again."
+      : "Couldn't reach the music database. Check your internet connection and search again.";
+  }
+});
+
+// ---------- Album detail pop-up ----------
+const dialog = document.getElementById("detail");
+
+function openDetail(album) {
+  fillCover(document.getElementById("dCover"), album, 500);
+  document.getElementById("dTitle").textContent = album.title;
+  document.getElementById("dArtist").textContent = album.artist;
+  document.getElementById("dMeta").textContent = metaLine(album);
+  document.getElementById("dNote").textContent = "";
+  dialog.showModal();
+}
+
+document.getElementById("dClose").addEventListener("click", () => dialog.close());
+// Tapping the dark area outside the pop-up also closes it
+dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+
+document.getElementById("dLog").addEventListener("click", () => {
+  // Placeholder: rating and reviewing get built in the next step.
+  document.getElementById("dNote").textContent = "Rating and reviews come in the next step.";
+});
+</script>
+</body>
+</html>
