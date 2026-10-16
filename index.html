@@ -427,13 +427,23 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () =>
    SEARCH (MusicBrainz, a free public music database)
    ========================================================= */
 let results = [];
+let searching = false;
 
 function cleanSearch(text) { return text.replace(/([+\-!(){}\[\]^"~*?:\\\/]|&&|\|\|)/g, "\\$1"); }
 
 async function searchAlbums(text) {
   const t = cleanSearch(text);
   const query = `(releasegroup:(${t}) OR artist:(${t})) AND (primarytype:album OR primarytype:ep)`;
-  const res = await fetch("https://musicbrainz.org/ws/2/release-group?fmt=json&limit=20&query=" + encodeURIComponent(query));
+  const url = "https://musicbrainz.org/ws/2/release-group?fmt=json&limit=20&query=" + encodeURIComponent(query);
+
+  // The database allows about one search per second. If it says "busy",
+  // wait a moment and quietly try again (up to 4 tries in total).
+  let res;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 1200 * attempt));
+    res = await fetch(url);
+    if (res.status !== 503) break;
+  }
   if (res.status === 503) throw new Error("busy");
   if (!res.ok) throw new Error("failed");
   const data = await res.json();
@@ -452,7 +462,8 @@ document.getElementById("searchForm").addEventListener("submit", async e => {
   const statusEl = document.getElementById("status");
   const list = document.getElementById("results");
   const text = input.value.trim();
-  if (!text) return;
+  if (!text || searching) return;
+  searching = true;
   input.blur();
   statusEl.className = "status"; statusEl.textContent = "Searching…"; list.innerHTML = "";
   try {
@@ -469,9 +480,10 @@ document.getElementById("searchForm").addEventListener("submit", async e => {
   } catch (err) {
     statusEl.className = "status error";
     statusEl.textContent = err.message === "busy"
-      ? "The music database is busy. Wait a second and search again."
+      ? "The music database is very busy right now. Wait a few seconds and search again."
       : "Couldn't reach the music database. Check your internet connection and search again.";
   }
+  searching = false;
 });
 document.getElementById("results").addEventListener("click", e => {
   const b = e.target.closest(".row"); if (b) openAlbum(results[b.dataset.i]);
