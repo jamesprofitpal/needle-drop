@@ -3,207 +3,442 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Liner Notes">
 <title>Liner Notes</title>
 
-<!-- FONTS: Abril Fatface for big headlines, Old Standard TT for reading text -->
+<!-- FONTS: Archivo (heavy grotesque) for most text, UnifrakturCook (blackletter) for headings -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
 
 <style>
-/* ===== COLORS: change these to restyle the whole app ===== */
+/* ===== COLOURS AND FONTS: change these to restyle the whole app ===== */
 :root {
-  --paper: #E9DFC4;      /* yellowed newsprint */
-  --paper-dark: #DDD0AE; /* shading on the paper */
-  --ink: #1C1A17;        /* printing ink */
-  --ink-soft: #5A5348;   /* faded ink for small text */
-  --red: #A3222B;        /* the second print colour */
-  --display: "Abril Fatface", Georgia, serif;
-  --body: "Old Standard TT", Georgia, "Times New Roman", serif;
+  --black: #000000;
+  --panel: #0C0C10;       /* slightly raised surfaces */
+  --line: #24242C;        /* thin dividers */
+  --white: #E9E7E2;
+  --grey: #8C8A92;
+  --blue: #2F63D6;        /* cobalt */
+  --blue-dim: #1B3B86;
+  --red: #A3161C;         /* curtain red */
+  --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --gothic: "UnifrakturCook", "Old English Text MT", Georgia, serif;
+  --tabbar: 64px;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { height: 100%; }
+html { height: 100%; background: var(--black); }
 body {
   min-height: 100%;
-  background-color: var(--paper);
-  /* subtle paper grain, drawn with a tiny built-in image */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  color: var(--ink);
-  font-family: var(--body);
-  font-size: 17px;
-  line-height: 1.5;
-  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-top: env(safe-area-inset-top, 0px);
+  -webkit-tap-highlight-color: transparent;
+}
+/* Film grain over everything */
+body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50; opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+main { max-width: 640px; margin: 0 auto; padding: 0 18px calc(var(--tabbar) + 40px + env(safe-area-inset-bottom, 0px)); }
+.view[hidden] { display: none; }
+
+/* Blackletter page headings */
+.page-title {
+  font-family: var(--gothic); font-weight: 700;
+  font-size: 44px; line-height: 1; color: var(--blue);
+  padding: 22px 0 14px;
+}
+.masthead { position: relative; text-align: center; padding: 48px 0 30px; }
+.masthead .page-title { position: relative; z-index: 1; font-size: clamp(84px, 27vw, 150px); line-height: .82; padding: 0; }
+.masthead .page-title span { display: block; }
+.masthead p { position: relative; z-index: 1; color: var(--grey); font-size: 15px; margin-top: 18px; }
+/* Faint hand-drawn outline stars behind the title */
+.sky { position: absolute; inset: 0; pointer-events: none; }
+.sky svg {
+  position: absolute; fill: none; stroke: var(--blue);
+  stroke-width: 2; vector-effect: non-scaling-stroke;
+  stroke-linejoin: round; stroke-linecap: round;
 }
 
-.page { max-width: 640px; margin: 0 auto; padding: 0 18px 48px; }
-
-/* ===== MASTHEAD (the newspaper title at the top) ===== */
-.masthead { text-align: center; padding: 22px 0 10px; border-bottom: 3px double var(--ink); }
-.masthead h1 {
-  font-family: var(--display);
-  font-weight: 400;
-  font-size: clamp(54px, 17vw, 96px);
-  line-height: .9;
-  color: var(--red);
-  letter-spacing: -.01em;
+/* ===== TOP 5 ===== */
+.top5 { list-style: none; }
+.slot { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.rank { width: 34px; flex: none; text-align: center; font-weight: 900; font-stretch: 75%; font-size: 42px; line-height: 1; color: var(--blue); }
+.slot-main { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: center; background: none; border: 0; text-align: left; cursor: pointer; padding: 0; }
+.slot .cover { width: 72px; }
+.top5 .slot:first-child .cover { width: 112px; }
+.slot-blank { display: grid; place-items: center; background: transparent; border: 1px dashed var(--blue-dim); font-size: 28px; color: var(--blue-dim); }
+.slot-tools { display: flex; flex-direction: column; gap: 3px; }
+.slot-tools button { width: 34px; height: 28px; background: none; border: 1px solid var(--line); color: var(--grey); cursor: pointer; }
+.slot-tools button:disabled { opacity: .3; cursor: default; }
+.sheet .sheet-heading {
+  font-family: var(--gothic); font-weight: 700; font-stretch: normal; text-transform: none;
+  font-size: 32px; line-height: 1.05; color: var(--blue); margin-bottom: 6px;
 }
-.dateline {
-  display: flex; justify-content: space-between; gap: 12px;
-  margin-top: 10px; padding-top: 6px;
-  border-top: 1px solid var(--ink);
-  font-size: 13px; font-style: italic; color: var(--ink-soft);
-}
+.wide { width: 100%; margin-top: 10px; }
 
-/* ===== SEARCH BOX ===== */
-.search { margin: 22px 0 8px; }
-.search label { display: block; font-family: var(--display); font-size: 26px; line-height: 1.1; margin-bottom: 4px; }
-.search p { font-size: 15px; font-style: italic; color: var(--ink-soft); margin-bottom: 12px; }
-.search-row { display: flex; border: 2px solid var(--ink); background: #F3ECD8; }
+/* ===== SEARCH ===== */
+.search { margin: 22px 0 10px; }
+.search-row { display: flex; border: 2px solid var(--blue); }
 .search-row input {
-  flex: 1; min-width: 0;
-  font: 17px var(--body); /* 16px or more stops iPhones zooming in */
-  padding: 12px; border: 0; background: transparent; color: var(--ink);
+  flex: 1; min-width: 0; font: 17px var(--sans); padding: 13px 12px;
+  border: 0; background: transparent; color: var(--white);
 }
+.search-row input::placeholder { color: var(--grey); }
 .search-row input:focus { outline: none; }
-.search-row:focus-within { outline: 3px solid var(--red); outline-offset: 2px; }
+.search-row:focus-within { box-shadow: 0 0 0 3px var(--blue-dim); }
 .search-row button {
-  font: 700 16px var(--body);
-  padding: 0 18px; border: 0; border-left: 2px solid var(--ink);
-  background: var(--ink); color: var(--paper); cursor: pointer;
+  font-weight: 800; font-stretch: 85%; padding: 0 18px; border: 0;
+  background: var(--blue); color: var(--black); font-size: 16px; cursor: pointer;
 }
-.search-row button:active { background: var(--red); }
+.status { color: var(--grey); padding: 18px 0; text-align: center; }
+.status.error { color: #E0575C; }
 
-.status { font-style: italic; color: var(--ink-soft); padding: 18px 0; text-align: center; }
-.status.error { color: var(--red); font-style: normal; }
-
-/* ===== RESULTS LIST ===== */
-.results { list-style: none; }
-.results li { border-bottom: 1px solid var(--ink); }
-.result {
+.rows { list-style: none; }
+.rows li { border-bottom: 1px solid var(--line); }
+.row {
   display: flex; gap: 14px; align-items: center; width: 100%;
-  padding: 14px 0; background: none; border: 0; text-align: left;
-  color: inherit; font: inherit; cursor: pointer;
+  padding: 12px 0; background: none; border: 0; text-align: left; cursor: pointer;
 }
-.result:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
-.result:active { background: var(--paper-dark); }
-.result-text { min-width: 0; }
-.result-title { font-family: var(--display); font-size: 21px; line-height: 1.15; overflow-wrap: anywhere; }
-.result-artist { font-style: italic; }
-.result-meta { font-size: 14px; color: var(--ink-soft); }
+.row:active { background: var(--panel); }
+.row-text { min-width: 0; flex: 1; }
+.row-title { font-weight: 800; font-stretch: 80%; font-size: 19px; line-height: 1.15; overflow-wrap: anywhere; }
+.row-sub { color: var(--grey); font-size: 14px; }
 
-/* ===== ALBUM COVERS, printed like an old halftone photo ===== */
-.cover {
-  position: relative; flex: none;
-  width: 72px; aspect-ratio: 1;
-  background: var(--paper-dark); border: 1px solid var(--ink);
-  overflow: hidden;
-}
-.cover img { width: 100%; height: 100%; object-fit: cover; display: block;
-  filter: grayscale(.8) sepia(.25) contrast(1.2); }
-.cover::after { /* the dot pattern on top */
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: radial-gradient(rgba(28,26,23,.28) 0.8px, transparent 1.2px);
-  background-size: 3px 3px; mix-blend-mode: multiply;
-}
-.cover .blank { /* shown when an album has no cover art */
+/* ===== COVERS (full colour) ===== */
+.cover { position: relative; flex: none; width: 64px; aspect-ratio: 1; background: var(--panel); overflow: hidden; }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .blank {
   position: absolute; inset: 0; display: grid; place-items: center;
-  font-family: var(--display); font-size: 28px; color: var(--ink-soft);
+  font-family: var(--gothic); font-size: 30px; color: var(--blue-dim);
 }
 
-/* ===== ALBUM DETAIL (pops up when you tap a result) ===== */
-dialog {
-  margin: auto; width: min(92vw, 480px); max-height: 90vh;
-  padding: 22px; border: 2px solid var(--ink);
-  background: var(--paper); color: var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-}
-dialog::backdrop { background: rgba(28,26,23,.55); }
-dialog .cover { width: 100%; margin-bottom: 16px; }
-dialog h2 { font-family: var(--display); font-weight: 400; font-size: 32px; line-height: 1.05; }
-dialog .by { font-style: italic; font-size: 19px; margin: 4px 0 2px; }
-dialog .meta { font-size: 15px; color: var(--ink-soft); }
-.actions { display: flex; gap: 10px; margin-top: 20px; }
-.actions button { flex: 1; font: 700 16px var(--body); padding: 12px; border: 2px solid var(--ink); cursor: pointer; }
-.btn-log { background: var(--red); color: var(--paper); border-color: var(--red) !important; }
-.btn-close { background: transparent; color: var(--ink); }
-.note { margin-top: 12px; font-size: 14px; font-style: italic; color: var(--ink-soft); min-height: 1.4em; }
+/* ===== STARS AND MARKS ===== */
+.stars-text { color: var(--blue); letter-spacing: 1px; font-size: 14px; }
+.heart { color: var(--red); }
+.marks { display: flex; gap: 8px; align-items: center; margin-top: 2px; font-size: 14px; color: var(--grey); }
 
+/* ===== DIARY ===== */
+.month { font-family: var(--gothic); font-size: 28px; color: var(--blue); padding: 22px 0 4px; border-bottom: 1px solid var(--blue-dim); }
+.day { width: 40px; flex: none; text-align: center; }
+.day b { display: block; font-weight: 900; font-stretch: 75%; font-size: 26px; line-height: 1; }
+.day span { font-size: 12px; color: var(--grey); }
+.diary .cover { width: 52px; }
+
+/* ===== COLLECTION GRID ===== */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 10px; }
+@media (min-width: 520px) { .grid { grid-template-columns: repeat(4, 1fr); } }
+.tile { background: none; border: 0; text-align: left; cursor: pointer; min-width: 0; }
+.tile .cover { width: 100%; }
+.tile .marks { justify-content: space-between; }
+.count { color: var(--grey); font-size: 14px; margin-bottom: 14px; }
+
+/* ===== EMPTY STATE: the red curtain ===== */
+.curtain {
+  /* stretch past the page margins and down to the tab bar */
+  margin: 0 -18px calc(-50px - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100vh - 90px - var(--tabbar) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100dvh - 90px - var(--tabbar) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 28px; text-align: center; color: var(--white);
+  background:
+    /* soft spotlight in the middle, darker at the edges */
+    radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,60,60,.16), rgba(0,0,0,0) 70%),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,.6)),
+    /* the folds of the fabric */
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.55) 0px, rgba(0,0,0,.15) 10px, rgba(255,90,90,.10) 22px,
+      rgba(0,0,0,.10) 34px, rgba(0,0,0,.45) 46px, rgba(0,0,0,.55) 52px),
+    var(--red);
+}
+.curtain h3 { font-family: var(--gothic); font-size: 30px; font-weight: 700; line-height: 1.1; margin-bottom: 10px; }
+.curtain p { font-size: 15px; max-width: 30ch; margin: 0 auto 18px; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-block; font-weight: 800; font-stretch: 85%; font-size: 16px;
+  padding: 13px 18px; border: 2px solid var(--blue); background: var(--blue); color: var(--black); cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--white); border-color: var(--line); }
+.btn.danger { background: transparent; color: #E0575C; border-color: #5A1A1D; }
+.btn:active { filter: brightness(1.2); }
+
+/* ===== PROFILE ===== */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.stat { background: var(--black); padding: 16px; }
+.stat b { display: block; font-weight: 900; font-stretch: 75%; font-size: 40px; line-height: 1; color: var(--blue); }
+.stat span { color: var(--grey); font-size: 14px; }
+.section-head { font-family: var(--gothic); font-size: 26px; color: var(--blue); margin: 30px 0 10px; }
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 90px; border-bottom: 1px solid var(--line); }
+.bars div { flex: 1; background: var(--blue); min-height: 2px; }
+.bars-legend { display: flex; justify-content: space-between; color: var(--blue); font-size: 13px; margin-top: 4px; }
+.artists { list-style: none; }
+.artists li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.artists li span:last-child { color: var(--grey); }
+.backup p { color: var(--grey); font-size: 15px; margin-bottom: 12px; max-width: 60ch; }
+.backup .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.muted { color: var(--grey); font-size: 15px; }
+
+/* ===== BOTTOM TAB BAR, standing on the zigzag floor ===== */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--black);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.tabbar::before {
+  content: ""; display: block; height: 10px;
+  background: var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10'%3E%3Cpolygon points='0,0 10,5 20,0 20,5 10,10 0,5' fill='%23000'/%3E%3C/svg%3E") repeat-x;
+  background-size: 20px 10px;
+}
+.tabbar .inner { display: flex; max-width: 640px; margin: 0 auto; height: var(--tabbar); }
+.tab {
+  flex: 1; background: none; border: 0; cursor: pointer; color: var(--grey);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 11px; font-weight: 600;
+}
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--blue); }
+
+/* ===== POP-UP SHEET ===== */
+dialog.sheet {
+  margin: auto auto 0; width: 100%; max-width: 560px; max-height: 92vh; max-height: 92dvh;
+  border: 0; border-top: 2px solid var(--blue);
+  background: var(--black); color: var(--white); overflow-y: auto;
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+}
+dialog.sheet::backdrop { background: rgba(0,0,0,.75); }
 @media (prefers-reduced-motion: no-preference) {
-  dialog[open] { animation: drop .18s ease-out; }
-  @keyframes drop { from { transform: translateY(12px); opacity: 0; } }
+  dialog.sheet[open] { animation: rise .22s ease-out; }
+  @keyframes rise { from { transform: translateY(30px); opacity: 0; } }
 }
+.sheet .big-cover { width: 100%; margin-bottom: 18px; }
+.sheet h2 {
+  font-weight: 900; font-stretch: 75%; text-transform: uppercase;
+  font-size: clamp(30px, 9vw, 44px); line-height: .95; color: var(--blue); overflow-wrap: anywhere;
+}
+.sheet .by { font-family: var(--gothic); font-size: 26px; margin-top: 6px; }
+.sheet .meta { color: var(--grey); font-size: 15px; }
+.actions { display: flex; gap: 10px; margin-top: 20px; }
+.actions .btn { flex: 1; }
+.history { list-style: none; margin-top: 22px; border-top: 1px solid var(--line); }
+.history li { border-bottom: 1px solid var(--line); }
+.history button { width: 100%; text-align: left; background: none; border: 0; padding: 12px 0; cursor: pointer; }
+.history .rev { color: var(--grey); font-size: 14px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Log form */
+.log-head { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+.log-head .cover { width: 56px; }
+.field { margin-bottom: 18px; }
+.field > label, .field > .label { display: block; font-weight: 700; font-size: 14px; color: var(--grey); margin-bottom: 6px; }
+.field input[type=date], .field textarea {
+  width: 100%; font: 17px var(--sans); color: var(--white);
+  background: var(--panel); border: 1px solid var(--line); padding: 12px;
+}
+.field textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--blue); }
+.rating-row { display: flex; align-items: center; gap: 14px; }
+.star-input { display: flex; gap: 2px; touch-action: manipulation; cursor: pointer; }
+.star { position: relative; font-size: 40px; line-height: 1; color: #2A2A33; user-select: none; }
+.star .fill { position: absolute; inset: 0; overflow: hidden; color: var(--blue); width: 0; white-space: nowrap; }
+.link { background: none; border: 0; color: var(--grey); text-decoration: underline; cursor: pointer; font-size: 14px; }
+.toggles { display: flex; gap: 10px; }
+.toggle {
+  flex: 1; padding: 12px; border: 1px solid var(--line); background: var(--panel);
+  cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.toggle[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
+.toggle.like[aria-pressed="true"] { border-color: var(--red); color: #E0575C; }
+
+/* Little message that pops up above the tab bar */
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar) + 24px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%); z-index: 60;
+  background: var(--blue); color: var(--black); font-weight: 800; padding: 10px 16px;
+  opacity: 0; pointer-events: none; transition: opacity .2s; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
 </style>
 </head>
 <body>
-<div class="page">
 
-  <header class="masthead">
-    <h1>Liner Notes</h1>
-    <div class="dateline">
-      <span>Vol. 1, No. 1</span>
-      <span id="today"></span>
+<main>
+  <!-- ========== SEARCH TAB ========== -->
+  <section class="view" id="view-search">
+    <header class="masthead">
+      <div class="sky" id="sky" aria-hidden="true"></div>
+      <h1 class="page-title"><span>Liner</span><span>Notes</span></h1>
+      <p>Your diary of everything you listen to.</p>
+    </header>
+    <form class="search" id="searchForm">
+      <div class="search-row">
+        <input id="q" type="search" placeholder="Search albums or artists" autocomplete="off" enterkeyhint="search" aria-label="Search albums or artists">
+        <button type="submit">Search</button>
+      </div>
+    </form>
+    <div id="status" class="status" role="status"></div>
+    <ul id="results" class="rows"></ul>
+  </section>
+
+  <!-- ========== DIARY TAB ========== -->
+  <section class="view diary" id="view-diary" hidden>
+    <h1 class="page-title">Diary</h1>
+    <div id="diaryList"></div>
+  </section>
+
+  <!-- ========== COLLECTION TAB ========== -->
+  <section class="view" id="view-collection" hidden>
+    <h1 class="page-title">Collection</h1>
+    <div id="collectionList"></div>
+  </section>
+
+  <!-- ========== TOP 5 TAB ========== -->
+  <section class="view" id="view-top5" hidden>
+    <h1 class="page-title">Top 5</h1>
+    <div id="top5List"></div>
+  </section>
+
+  <!-- ========== PROFILE TAB ========== -->
+  <section class="view" id="view-profile" hidden>
+    <h1 class="page-title">Profile</h1>
+    <div id="profileBody"></div>
+    <div class="backup">
+      <h2 class="section-head">Backup</h2>
+      <p>Your diary is saved on this device only. Export a backup now and then, and keep it somewhere safe like your email or Google Drive.</p>
+      <div class="btns">
+        <button class="btn" id="exportBtn" type="button">Export backup</button>
+        <button class="btn ghost" id="importBtn" type="button">Import backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
     </div>
-  </header>
+  </section>
+</main>
 
-  <form class="search" id="searchForm">
-    <label for="q">What are you listening to?</label>
-    <p>Search by album, artist, or both, like "rumours fleetwood mac".</p>
-    <div class="search-row">
-      <input id="q" type="search" placeholder="Album or artist" autocomplete="off" enterkeyhint="search">
-      <button type="submit">Search</button>
-    </div>
-  </form>
-
-  <div id="status" class="status" role="status"></div>
-  <ul id="results" class="results"></ul>
-
-</div>
-
-<dialog id="detail">
-  <div class="cover" id="dCover"></div>
-  <h2 id="dTitle"></h2>
-  <p class="by" id="dArtist"></p>
-  <p class="meta" id="dMeta"></p>
-  <div class="actions">
-    <button class="btn-close" id="dClose">Close</button>
-    <button class="btn-log" id="dLog">Log this album</button>
+<!-- ========== BOTTOM TABS ========== -->
+<nav class="tabbar" aria-label="Sections">
+  <div class="inner">
+    <button class="tab" data-tab="search" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      Search
+    </button>
+    <button class="tab" data-tab="diary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      Diary
+    </button>
+    <button class="tab" data-tab="collection">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
+      Collection
+    </button>
+    <button class="tab" data-tab="top5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>
+      Top 5
+    </button>
+    <button class="tab" data-tab="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+      Profile
+    </button>
   </div>
-  <p class="note" id="dNote"></p>
-</dialog>
+</nav>
+
+<dialog class="sheet" id="sheet"></dialog>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
-// ---------- Today's date in the masthead ----------
-document.getElementById("today").textContent = new Date().toLocaleDateString(undefined,
-  { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+/* =========================================================
+   SAVING: your logs are kept in this browser's storage
+   ========================================================= */
+const STORE_KEY = "linernotes.entries.v1";
+let entries = loadEntries();
 
-const form = document.getElementById("searchForm");
-const input = document.getElementById("q");
-const statusEl = document.getElementById("status");
-const resultsEl = document.getElementById("results");
-let albums = []; // the latest search results
-
-// ---------- Searching MusicBrainz (a free public music database) ----------
-// Special characters have meaning in MusicBrainz searches, so we neutralise them.
-function cleanSearch(text) {
-  return text.replace(/([+\-!(){}\[\]^"~*?:\\\/]|&&|\|\|)/g, "\\$1");
+function loadEntries() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+    return Array.isArray(saved) ? saved : [];
+  } catch { return []; }
 }
+function saveEntries() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); return true; }
+  catch { toast("Couldn't save. Your phone's storage may be full."); return false; }
+}
+
+/* =========================================================
+   SMALL HELPERS
+   ========================================================= */
+// Makes text safe to put into the page (stops odd album names breaking things)
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function parseDate(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+function niceDate(s) { return parseDate(s).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }); }
+function starText(r) { return r ? "★".repeat(Math.floor(r)) + (r % 1 ? "½" : "") : ""; }
+function metaLine(a) { return [a.artist, a.year].filter(Boolean).join(", "); }
+
+function coverHTML(album, size, extraClass = "") {
+  const letter = esc((album.title || "?").charAt(0).toUpperCase());
+  return `<div class="cover ${extraClass}"><img alt="" loading="lazy"
+    src="https://coverartarchive.org/release-group/${esc(album.albumId)}/front-${size}"
+    onerror="this.outerHTML='<span class=&quot;blank&quot;>${letter}</span>'"></div>`;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+let currentTab = "search";
+function showTab(name) {
+  currentTab = name;
+  document.querySelectorAll(".view").forEach(v => v.hidden = v.id !== "view-" + name);
+  document.querySelectorAll(".tab").forEach(t =>
+    t.dataset.tab === name ? t.setAttribute("aria-current", "page") : t.removeAttribute("aria-current"));
+  renderCurrent();
+  window.scrollTo(0, 0);
+}
+function renderCurrent() {
+  if (currentTab === "diary") renderDiary();
+  if (currentTab === "collection") renderCollection();
+  if (currentTab === "top5") renderTop5();
+  if (currentTab === "profile") renderProfile();
+}
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => showTab(t.dataset.tab)));
+
+/* =========================================================
+   SEARCH (MusicBrainz, a free public music database)
+   ========================================================= */
+let results = [];
+
+function cleanSearch(text) { return text.replace(/([+\-!(){}\[\]^"~*?:\\\/]|&&|\|\|)/g, "\\$1"); }
 
 async function searchAlbums(text) {
   const t = cleanSearch(text);
-  // Look for the words in the album title OR the artist name, albums and EPs only.
   const query = `(releasegroup:(${t}) OR artist:(${t})) AND (primarytype:album OR primarytype:ep)`;
-  const url = "https://musicbrainz.org/ws/2/release-group?fmt=json&limit=20&query=" + encodeURIComponent(query);
-
-  const res = await fetch(url);
+  const res = await fetch("https://musicbrainz.org/ws/2/release-group?fmt=json&limit=20&query=" + encodeURIComponent(query));
   if (res.status === 503) throw new Error("busy");
   if (!res.ok) throw new Error("failed");
   const data = await res.json();
-
-  // Turn MusicBrainz's data into simple album objects.
   return (data["release-groups"] || []).map(rg => ({
-    id: rg.id,
+    albumId: rg.id,
     title: rg.title,
     artist: (rg["artist-credit"] || []).map(c => c.name + (c.joinphrase || "")).join("") || "Unknown artist",
     year: (rg["first-release-date"] || "").slice(0, 4),
@@ -211,74 +446,26 @@ async function searchAlbums(text) {
   }));
 }
 
-// Cover Art Archive hosts album covers, matched by MusicBrainz's album id.
-function coverUrl(id, size) {
-  return `https://coverartarchive.org/release-group/${id}/front-${size}`;
-}
-
-// Builds the cover square; falls back to the album's first letter if no art exists.
-function fillCover(box, album, size) {
-  box.innerHTML = "";
-  const img = new Image();
-  img.alt = "";
-  img.loading = "lazy";
-  img.src = coverUrl(album.id, size);
-  img.onerror = () => {
-    img.remove();
-    const blank = document.createElement("span");
-    blank.className = "blank";
-    blank.textContent = album.title.charAt(0).toUpperCase();
-    box.appendChild(blank);
-  };
-  box.appendChild(img);
-}
-
-function metaLine(album) {
-  return [album.year, album.type].filter(Boolean).join(", ");
-}
-
-// ---------- Showing results ----------
-function showResults(list) {
-  resultsEl.innerHTML = "";
-  list.forEach((album, i) => {
-    const li = document.createElement("li");
-    const btn = document.createElement("button");
-    btn.className = "result";
-    btn.type = "button";
-
-    const cover = document.createElement("div");
-    cover.className = "cover";
-    fillCover(cover, album, 250);
-
-    const text = document.createElement("div");
-    text.className = "result-text";
-    // textContent (not innerHTML) keeps odd album names from breaking the page
-    const t = document.createElement("div"); t.className = "result-title"; t.textContent = album.title;
-    const a = document.createElement("div"); a.className = "result-artist"; a.textContent = album.artist;
-    const m = document.createElement("div"); m.className = "result-meta"; m.textContent = metaLine(album);
-    text.append(t, a, m);
-
-    btn.append(cover, text);
-    btn.addEventListener("click", () => openDetail(album));
-    li.appendChild(btn);
-    resultsEl.appendChild(li);
-  });
-}
-
-form.addEventListener("submit", async (e) => {
+document.getElementById("searchForm").addEventListener("submit", async e => {
   e.preventDefault();
+  const input = document.getElementById("q");
+  const statusEl = document.getElementById("status");
+  const list = document.getElementById("results");
   const text = input.value.trim();
   if (!text) return;
-
-  input.blur(); // hides the phone keyboard
-  statusEl.className = "status";
-  statusEl.textContent = "Searching the archives…";
-  resultsEl.innerHTML = "";
-
+  input.blur();
+  statusEl.className = "status"; statusEl.textContent = "Searching…"; list.innerHTML = "";
   try {
-    albums = await searchAlbums(text);
-    statusEl.textContent = albums.length ? "" : `No albums found for "${text}". Try fewer words or check the spelling.`;
-    showResults(albums);
+    results = await searchAlbums(text);
+    statusEl.textContent = results.length ? "" : `No albums found for "${text}". Try fewer words or check the spelling.`;
+    list.innerHTML = results.map((a, i) => `
+      <li><button class="row" type="button" data-i="${i}">
+        ${coverHTML(a, 250)}
+        <div class="row-text">
+          <div class="row-title">${esc(a.title)}</div>
+          <div class="row-sub">${esc(metaLine(a))}${a.type && a.type !== "Album" ? ", " + esc(a.type) : ""}</div>
+        </div>
+      </button></li>`).join("");
   } catch (err) {
     statusEl.className = "status error";
     statusEl.textContent = err.message === "busy"
@@ -286,27 +473,400 @@ form.addEventListener("submit", async (e) => {
       : "Couldn't reach the music database. Check your internet connection and search again.";
   }
 });
+document.getElementById("results").addEventListener("click", e => {
+  const b = e.target.closest(".row"); if (b) openAlbum(results[b.dataset.i]);
+});
 
-// ---------- Album detail pop-up ----------
-const dialog = document.getElementById("detail");
+/* =========================================================
+   ALBUM SHEET (tap an album anywhere)
+   ========================================================= */
+const sheet = document.getElementById("sheet");
+sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
 
-function openDetail(album) {
-  fillCover(document.getElementById("dCover"), album, 500);
-  document.getElementById("dTitle").textContent = album.title;
-  document.getElementById("dArtist").textContent = album.artist;
-  document.getElementById("dMeta").textContent = metaLine(album);
-  document.getElementById("dNote").textContent = "";
-  dialog.showModal();
+function entriesFor(albumId) {
+  return entries.filter(x => x.albumId === albumId).sort((a, b) => b.date.localeCompare(a.date));
 }
 
-document.getElementById("dClose").addEventListener("click", () => dialog.close());
-// Tapping the dark area outside the pop-up also closes it
-dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
+function openAlbum(album) {
+  const mine = entriesFor(album.albumId);
+  const topSpot = top5.findIndex(x => x && x.albumId === album.albumId);
+  sheet.innerHTML = `
+    ${coverHTML(album, 500, "big-cover")}
+    <h2>${esc(album.title)}</h2>
+    <p class="by">${esc(album.artist)}</p>
+    <p class="meta">${esc([album.year, album.type].filter(Boolean).join(", "))}</p>
+    <div class="actions">
+      <button class="btn ghost" data-act="close" type="button">Close</button>
+      <button class="btn" data-act="log" type="button">${mine.length ? "Log again" : "Log this album"}</button>
+    </div>
+    <button class="btn ghost wide" data-act="top5" type="button">${topSpot >= 0 ? `Number ${topSpot + 1} in your Top 5. Change spot` : "Add to Top 5"}</button>
+    ${mine.length ? `
+      <ul class="history">
+        ${mine.map(x => `<li><button type="button" data-edit="${esc(x.id)}">
+          <div class="marks"><span>${esc(niceDate(x.date))}</span>
+            <span class="stars-text">${starText(x.rating)}</span>
+            ${x.liked ? '<span class="heart">♥</span>' : ""}${x.relisten ? "<span>Relisten</span>" : ""}</div>
+          ${x.review ? `<div class="rev">${esc(x.review)}</div>` : ""}
+        </button></li>`).join("")}
+      </ul>` : ""}`;
+  sheet.querySelector('[data-act="close"]').onclick = () => sheet.close();
+  sheet.querySelector('[data-act="log"]').onclick = () => openLog(album, null);
+  sheet.querySelector('[data-act="top5"]').onclick = () => chooseSpot(album);
+  sheet.querySelectorAll("[data-edit]").forEach(b =>
+    b.onclick = () => openLog(album, entries.find(x => x.id === b.dataset.edit)));
+  if (!sheet.open) sheet.showModal();
+  sheet.scrollTop = 0;
+}
 
-document.getElementById("dLog").addEventListener("click", () => {
-  // Placeholder: rating and reviewing get built in the next step.
-  document.getElementById("dNote").textContent = "Rating and reviews come in the next step.";
-});
+/* =========================================================
+   LOG FORM (rate, like, review)
+   ========================================================= */
+function openLog(album, existing) {
+  let rating = existing ? existing.rating : 0;
+  let liked = existing ? existing.liked : false;
+  let relisten = existing ? existing.relisten : entriesFor(album.albumId).length > 0;
+
+  sheet.innerHTML = `
+    <div class="log-head">
+      ${coverHTML(album, 250)}
+      <div class="row-text"><div class="row-title">${esc(album.title)}</div><div class="row-sub">${esc(metaLine(album))}</div></div>
+    </div>
+    <div class="field">
+      <label for="fDate">Date listened</label>
+      <input type="date" id="fDate" value="${esc(existing ? existing.date : todayStr())}" max="${todayStr()}">
+    </div>
+    <div class="field">
+      <span class="label" id="ratingLabel">Rating</span>
+      <div class="rating-row">
+        <div class="star-input" id="stars" role="slider" tabindex="0" aria-labelledby="ratingLabel"
+             aria-valuemin="0" aria-valuemax="5">
+          ${[0,1,2,3,4].map(i => `<span class="star" data-i="${i}">★<span class="fill">★</span></span>`).join("")}
+        </div>
+        <button class="link" id="clearRating" type="button">Clear</button>
+      </div>
+    </div>
+    <div class="field toggles">
+      <button class="toggle like" id="fLike" type="button" aria-pressed="${liked}">♥ Like</button>
+      <button class="toggle" id="fRelisten" type="button" aria-pressed="${relisten}">Relisten</button>
+    </div>
+    <div class="field">
+      <label for="fReview">Review</label>
+      <textarea id="fReview" placeholder="What did you think?">${esc(existing ? existing.review : "")}</textarea>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="fCancel" type="button">Cancel</button>
+      <button class="btn" id="fSave" type="button">Save</button>
+    </div>
+    ${existing ? '<div class="actions"><button class="btn danger" id="fDelete" type="button">Delete this entry</button></div>' : ""}`;
+
+  // Star rating: tap the left half of a star for a half star
+  const starsEl = sheet.querySelector("#stars");
+  function drawStars() {
+    starsEl.querySelectorAll(".star").forEach((s, i) => {
+      s.querySelector(".fill").style.width = Math.max(0, Math.min(1, rating - i)) * 100 + "%";
+    });
+    starsEl.setAttribute("aria-valuenow", rating);
+    starsEl.setAttribute("aria-valuetext", rating ? rating + " stars" : "No rating");
+  }
+  starsEl.addEventListener("click", e => {
+    const s = e.target.closest(".star"); if (!s) return;
+    const r = s.getBoundingClientRect();
+    rating = Number(s.dataset.i) + (e.clientX - r.left < r.width / 2 ? 0.5 : 1);
+    drawStars();
+  });
+  starsEl.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { rating = Math.min(5, rating + 0.5); drawStars(); e.preventDefault(); }
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { rating = Math.max(0, rating - 0.5); drawStars(); e.preventDefault(); }
+  });
+  sheet.querySelector("#clearRating").onclick = () => { rating = 0; drawStars(); };
+  drawStars();
+
+  const likeBtn = sheet.querySelector("#fLike");
+  likeBtn.onclick = () => { liked = !liked; likeBtn.setAttribute("aria-pressed", liked); };
+  const reBtn = sheet.querySelector("#fRelisten");
+  reBtn.onclick = () => { relisten = !relisten; reBtn.setAttribute("aria-pressed", relisten); };
+
+  sheet.querySelector("#fCancel").onclick = () => openAlbum(album);
+
+  sheet.querySelector("#fSave").onclick = () => {
+    const entry = {
+      id: existing ? existing.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      albumId: album.albumId, title: album.title, artist: album.artist,
+      year: album.year || "", type: album.type || "",
+      date: sheet.querySelector("#fDate").value || todayStr(),
+      rating, liked, relisten,
+      review: sheet.querySelector("#fReview").value.trim(),
+      created: existing ? existing.created : Date.now()
+    };
+    entries = existing ? entries.map(x => x.id === entry.id ? entry : x) : [...entries, entry];
+    if (saveEntries()) { sheet.close(); toast(existing ? "Entry updated" : "Saved to your diary"); renderCurrent(); }
+  };
+
+  if (existing) sheet.querySelector("#fDelete").onclick = () => {
+    if (!confirm("Delete this diary entry? This can't be undone.")) return;
+    entries = entries.filter(x => x.id !== existing.id);
+    saveEntries(); sheet.close(); toast("Entry deleted"); renderCurrent();
+  };
+
+  if (!sheet.open) sheet.showModal();
+  sheet.scrollTop = 0;
+}
+
+/* =========================================================
+   TOP 5: your five favourite albums, in order
+   ========================================================= */
+const TOP_KEY = "linernotes.top5.v1";
+let top5 = loadTop5();
+
+function loadTop5() {
+  try {
+    const v = JSON.parse(localStorage.getItem(TOP_KEY) || "[]");
+    return Array.from({ length: 5 }, (_, i) => (Array.isArray(v) && v[i]) || null);
+  } catch { return Array(5).fill(null); }
+}
+function saveTop5() {
+  try { localStorage.setItem(TOP_KEY, JSON.stringify(top5)); }
+  catch { toast("Couldn't save. Your phone's storage may be full."); }
+}
+function albumOnly(a) {
+  return { albumId: a.albumId, title: a.title, artist: a.artist, year: a.year || "", type: a.type || "" };
+}
+// Puts an album in spot i. If it was already in another spot, the two swap places.
+function placeInTop5(album, i) {
+  const a = albumOnly(album);
+  const j = top5.findIndex(x => x && x.albumId === a.albumId);
+  if (j === i) return;
+  if (j >= 0) top5[j] = top5[i];
+  top5[i] = a;
+  saveTop5();
+}
+// Every album you've logged, most recent first, one per album
+function loggedAlbums() {
+  const latest = {};
+  [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.created - b.created).forEach(x => latest[x.albumId] = x);
+  return Object.values(latest).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function renderTop5() {
+  const box = document.getElementById("top5List");
+  box.innerHTML = `<p class="count">The five albums that define you. Tap a spot to fill it.</p>
+  <ol class="top5">${top5.map((a, i) => `
+    <li class="slot">
+      <span class="rank">${i + 1}</span>
+      ${a ? `
+        <button class="slot-main" type="button" data-view="${i}">
+          ${coverHTML(a, 250)}
+          <div class="row-text"><div class="row-title">${esc(a.title)}</div><div class="row-sub">${esc(metaLine(a))}</div></div>
+        </button>
+        <div class="slot-tools">
+          <button type="button" data-up="${i}" aria-label="Move up" ${i === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" data-down="${i}" aria-label="Move down" ${i === 4 ? "disabled" : ""}>↓</button>
+          <button type="button" data-remove="${i}" aria-label="Remove">✕</button>
+        </div>` : `
+        <button class="slot-main" type="button" data-pick="${i}">
+          <div class="cover slot-blank">+</div>
+          <div class="row-text"><div class="row-sub">Choose an album</div></div>
+        </button>`}
+    </li>`).join("")}</ol>`;
+
+  const swap = (i, j) => { [top5[i], top5[j]] = [top5[j], top5[i]]; saveTop5(); renderTop5(); };
+  box.querySelectorAll("[data-view]").forEach(b => b.onclick = () => openAlbum(top5[b.dataset.view]));
+  box.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => pickForSpot(Number(b.dataset.pick)));
+  box.querySelectorAll("[data-up]").forEach(b => b.onclick = () => { const i = Number(b.dataset.up); swap(i, i - 1); });
+  box.querySelectorAll("[data-down]").forEach(b => b.onclick = () => { const i = Number(b.dataset.down); swap(i, i + 1); });
+  box.querySelectorAll("[data-remove]").forEach(b => b.onclick = () => { top5[Number(b.dataset.remove)] = null; saveTop5(); renderTop5(); });
+}
+
+// Tapping an empty spot: choose from albums you've logged
+function pickForSpot(i) {
+  const albums = loggedAlbums();
+  sheet.innerHTML = `
+    <h2 class="sheet-heading">Choose number ${i + 1}</h2>
+    ${albums.length ? `<p class="meta">Pick from albums you've logged. To add one you haven't logged, search for it and tap Add to Top 5.</p>
+      <ul class="rows">${albums.map((a, k) => `
+        <li><button class="row" type="button" data-k="${k}">${coverHTML(a, 250)}
+          <div class="row-text"><div class="row-title">${esc(a.title)}</div><div class="row-sub">${esc(metaLine(a))}</div></div>
+        </button></li>`).join("")}</ul>`
+      : `<p class="meta">You haven't logged any albums yet. Search for one and tap Add to Top 5.</p>`}
+    <div class="actions">
+      <button class="btn ghost" data-act="close" type="button">Cancel</button>
+      <button class="btn" data-act="search" type="button">Search albums</button>
+    </div>`;
+  sheet.querySelector('[data-act="close"]').onclick = () => sheet.close();
+  sheet.querySelector('[data-act="search"]').onclick = () => { sheet.close(); showTab("search"); document.getElementById("q").focus(); };
+  sheet.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+    placeInTop5(albums[b.dataset.k], i); sheet.close(); renderTop5(); toast(`Added at number ${i + 1}`);
+  });
+  if (!sheet.open) sheet.showModal();
+  sheet.scrollTop = 0;
+}
+
+// From an album's page: choose which spot it goes in
+function chooseSpot(album) {
+  sheet.innerHTML = `
+    <h2 class="sheet-heading">Add to your Top 5</h2>
+    <p class="meta">Pick a spot for ${esc(album.title)}. Whatever is there now gets replaced.</p>
+    <ol class="top5">${top5.map((a, i) => `
+      <li class="slot"><span class="rank">${i + 1}</span>
+        <button class="slot-main" type="button" data-spot="${i}">
+          ${a ? coverHTML(a, 250) : '<div class="cover slot-blank">+</div>'}
+          <div class="row-text">${a ? `<div class="row-title">${esc(a.title)}</div><div class="row-sub">${esc(a.artist)}</div>` : '<div class="row-sub">Empty</div>'}</div>
+        </button></li>`).join("")}</ol>
+    <div class="actions"><button class="btn ghost" data-act="back" type="button">Back</button></div>`;
+  sheet.querySelector('[data-act="back"]').onclick = () => openAlbum(album);
+  sheet.querySelectorAll("[data-spot]").forEach(b => b.onclick = () => {
+    const i = Number(b.dataset.spot);
+    placeInTop5(album, i); sheet.close(); toast(`Number ${i + 1} in your Top 5`); renderCurrent();
+  });
+  sheet.scrollTop = 0;
+}
+
+/* =========================================================
+   STARS BEHIND THE TITLE: slightly wonky, hand-drawn outlines
+   ========================================================= */
+function wobblyStar(seed) {
+  let s = seed * 7919 + 1;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const tilt = (rnd() - 0.5) * 0.3;
+  const pts = [];
+  for (let k = 0; k < 10; k++) {
+    const ang = -Math.PI / 2 + k * Math.PI / 5 + tilt + (rnd() - 0.5) * 0.2;
+    const rad = (k % 2 ? 20 : 50) * (0.8 + rnd() * 0.38);
+    pts.push([Math.cos(ang) * rad, Math.sin(ang) * rad]);
+  }
+  let d = "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" L");
+  // finish slightly off the starting point, like a pen that didn't quite close the shape
+  d += ` L${(pts[0][0] + (rnd() - 0.5) * 12).toFixed(1)} ${(pts[0][1] + 4 + rnd() * 6).toFixed(1)}`;
+  return d;
+}
+(function drawSky() {
+  // [left %, top %, size in px, rotation in degrees]
+  const spots = [[6, 10, 34, -14], [91, 6, 26, 18], [12, 52, 18, 30], [93, 48, 38, -8],
+                 [4, 86, 20, 10], [82, 90, 24, -22], [50, 3, 14, 6], [30, 97, 14, 40],
+                 [70, 38, 12, -30], [26, 34, 11, 12], [62, 96, 10, 24]];
+  document.getElementById("sky").innerHTML = spots.map(([x, y, size, rot], i) =>
+    `<svg viewBox="-60 -60 120 120" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;
+      transform:translate(-50%,-50%) rotate(${rot}deg);opacity:${0.6 + (i % 3) * 0.15}">
+      <path d="${wobblyStar(i + 3)}"/></svg>`).join("");
+})();
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+function emptyCurtain(title, text) {
+  return `<div class="curtain"><h3>${title}</h3><p>${text}</p>
+    <button class="btn" type="button" onclick="showTab('search')">Find an album</button></div>`;
+}
+
+/* =========================================================
+   DIARY TAB
+   ========================================================= */
+function renderDiary() {
+  const box = document.getElementById("diaryList");
+  if (!entries.length) { box.innerHTML = emptyCurtain("Nothing logged yet", "Search for an album, then tap Log this album to start your diary."); return; }
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.created - a.created);
+  let html = "", month = "";
+  sorted.forEach(x => {
+    const d = parseDate(x.date);
+    const m = d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    if (m !== month) { if (month) html += "</ul>"; html += `<h2 class="month">${esc(m)}</h2><ul class="rows">`; month = m; }
+    html += `<li><button class="row" type="button" data-id="${esc(x.id)}">
+      <div class="day"><b>${d.getDate()}</b><span>${esc(d.toLocaleDateString(undefined, { weekday: "short" }))}</span></div>
+      ${coverHTML(x, 250)}
+      <div class="row-text">
+        <div class="row-title">${esc(x.title)}</div>
+        <div class="row-sub">${esc(metaLine(x))}</div>
+        <div class="marks"><span class="stars-text">${starText(x.rating)}</span>
+          ${x.liked ? '<span class="heart">♥</span>' : ""}${x.relisten ? "<span>Relisten</span>" : ""}${x.review ? "<span>Review</span>" : ""}</div>
+      </div></button></li>`;
+  });
+  box.innerHTML = html + "</ul>";
+  box.querySelectorAll("[data-id]").forEach(b => b.onclick = () => {
+    const x = entries.find(e => e.id === b.dataset.id); openLog(x, x);
+  });
+}
+
+/* =========================================================
+   COLLECTION TAB (every album you've logged, as a grid)
+   ========================================================= */
+function renderCollection() {
+  const box = document.getElementById("collectionList");
+  if (!entries.length) { box.innerHTML = emptyCurtain("Your shelf is empty", "Every album you log shows up here as a cover."); return; }
+  const latest = {};
+  [...entries].sort((a, b) => a.date.localeCompare(b.date) || a.created - b.created).forEach(x => latest[x.albumId] = x);
+  const albums = Object.values(latest).sort((a, b) => b.date.localeCompare(a.date));
+  box.innerHTML = `<p class="count">${albums.length} ${albums.length === 1 ? "album" : "albums"}</p>
+    <div class="grid">${albums.map(x => `
+      <button class="tile" type="button" data-album="${esc(x.albumId)}" aria-label="${esc(x.title + ", " + x.artist)}">
+        ${coverHTML(x, 250)}
+        <div class="marks"><span class="stars-text">${starText(x.rating)}</span>${x.liked ? '<span class="heart">♥</span>' : ""}</div>
+      </button>`).join("")}</div>`;
+  box.querySelectorAll("[data-album]").forEach(b => b.onclick = () => openAlbum(latest[b.dataset.album]));
+}
+
+/* =========================================================
+   PROFILE TAB (stats)
+   ========================================================= */
+function renderProfile() {
+  const box = document.getElementById("profileBody");
+  if (!entries.length) { box.innerHTML = '<p class="muted">Your stats appear here once you log a few albums.</p>'; return; }
+  const year = String(new Date().getFullYear());
+  const rated = entries.filter(x => x.rating);
+  const avg = rated.length ? (rated.reduce((s, x) => s + x.rating, 0) / rated.length).toFixed(1) : "–";
+  const unique = new Set(entries.map(x => x.albumId)).size;
+
+  const buckets = Array(10).fill(0);
+  rated.forEach(x => buckets[Math.round(x.rating * 2) - 1]++);
+  const top = Math.max(1, ...buckets);
+
+  const artistCounts = {};
+  entries.forEach(x => artistCounts[x.artist] = (artistCounts[x.artist] || 0) + 1);
+  const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  box.innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${unique}</b><span>Albums</span></div>
+      <div class="stat"><b>${entries.filter(x => x.date.startsWith(year)).length}</b><span>Logged in ${year}</span></div>
+      <div class="stat"><b>${avg}</b><span>Average rating</span></div>
+      <div class="stat"><b>${entries.filter(x => x.liked).length}</b><span>Liked</span></div>
+    </div>
+    <h2 class="section-head">Ratings</h2>
+    <div class="bars">${buckets.map((n, i) =>
+      `<div style="height:${(n / top) * 100}%" title="${(i + 1) / 2} stars: ${n}"></div>`).join("")}</div>
+    <div class="bars-legend"><span>½</span><span>★★★★★</span></div>
+    <h2 class="section-head">Most logged artists</h2>
+    <ul class="artists">${topArtists.map(([name, n]) =>
+      `<li><span>${esc(name)}</span><span>${n}</span></li>`).join("")}</ul>`;
+}
+
+/* =========================================================
+   BACKUP: export to a file, import from a file
+   ========================================================= */
+document.getElementById("exportBtn").onclick = () => {
+  const data = JSON.stringify({ app: "liner-notes", version: 1, exported: new Date().toISOString(), entries, top5 }, null, 2);
+  const url = URL.createObjectURL(new Blob([data], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = `liner-notes-backup-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+};
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    const incoming = (Array.isArray(parsed) ? parsed : parsed.entries || []).filter(x => x && x.id && x.albumId && x.date);
+    const byId = Object.fromEntries(entries.map(x => [x.id, x]));
+    incoming.forEach(x => byId[x.id] = x);
+    entries = Object.values(byId);
+    if (Array.isArray(parsed.top5)) { top5 = Array.from({ length: 5 }, (_, i) => parsed.top5[i] || null); saveTop5(); }
+    saveEntries(); renderCurrent();
+    toast(`Imported ${incoming.length} ${incoming.length === 1 ? "entry" : "entries"}`);
+  } catch {
+    toast("That file isn't a Liner Notes backup.");
+  }
+  e.target.value = "";
+};
 </script>
 </body>
 </html>
